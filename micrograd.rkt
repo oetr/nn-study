@@ -33,13 +33,14 @@
       val))
 
 
-(define (value-add! val1 val2)
+(define (value-add! val1 val2 #:label (label ""))
   (define other (value-wrap val2))
   
   (define out (make-value (+ (value-data val1)
                              (value-data other))
                           (list val1 other)
-                          #:op "+"))
+                          #:op "+"
+                          #:label label))
   
   (define (backward)
     (grad+! val1 (value-grad out))
@@ -49,13 +50,14 @@
   out)
 
 
-(define (value-mul! val1 val2)
+(define (value-mul! val1 val2 #:label (label ""))
   (define other (value-wrap val2))
 
   (define out (make-value (* (value-data val1)
                              (value-data other))
                           (list val1 other)
-                          #:op "*"))
+                          #:op "*"
+                          #:label label))
 
   (define (backward)
     (grad+! val1 (* (value-data other) (value-grad out)))
@@ -64,6 +66,16 @@
   (set-value-backward! out backward)
   out)
 
+
+(define (value-tanh! val1 #:label (label ""))
+  (define x (value-data val1))
+  (define t (/ (+ -1 (exp (* 2 x)))
+               (+  1 (exp (* 2 x)))))
+  (define out (make-value t (list val1) #:op "tanh" #:label label))
+  (define (backward)
+    (grad+! val1 (- 1 (sqr t))))
+  (set-value-backward! out backward)
+  out)
 
 (define (backward! v)
   (define visited (mutable-set))
