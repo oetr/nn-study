@@ -73,7 +73,7 @@
                (+  1 (exp (* 2 x)))))
   (define out (make-value t (list val1) #:op "tanh" #:label label))
   (define (backward)
-    (grad+! val1 (- 1 (sqr t))))
+    (grad+! val1 (* (- 1 (sqr t)) (value-grad out))))
   (set-value-backward! out backward)
   out)
 
