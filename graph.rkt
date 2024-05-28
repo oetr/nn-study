@@ -1,6 +1,6 @@
 #lang racket
 (require racket/draw
-         "./micrograd.rkt")
+         "micrograd.rkt")
 
 (provide (all-defined-out))
 
@@ -19,11 +19,13 @@
                              child))]))
     
     (define-values (seen edges) (traverse-aux (set) (list) start))
-    
+
     (append* edges (for/list ([val seen])
                      (cons (~a (eq-hash-code val)
-                               " [label = \"" (value-label val) "| data " (value-data val) "| grad "
-                               (value-grad val)
+                               " [label = \"" (value-label val) "| data "
+                               (real->decimal-string (value-data val) 2)
+                               "| grad "
+                               (real->decimal-string (value-grad val) 2)
                                "\" shape=\"record\" ];")
                            ;; operation node
                            (if (not (string=? "" (value-op val)))
@@ -34,19 +36,24 @@
                                   (~a id " -> " (eq-hash-code val) ";")))
                                empty)))))
   
-    (define graph (append (cons "digraph {"
-                                (traverse-value v))
-                          (list "}")))
-    (define fold (foldr string-append "" graph))
+  (define graph (append (cons "digraph {"
+                              (traverse-value v))
+                        (list "}")))
+  (define fold (foldr string-append "" graph))
   fold)
 
-  
-(define (make-graph v)
+
+(define (make-graph v #:dpi (dpi 100))
   (parameterize ([current-custodian (make-custodian)])
     (let ([p-stdin (open-input-string (value->graphviz v))]
           [out (open-output-bytes)]
           [err (open-output-bytes)])
-      (define proc-data (process/ports out p-stdin err "dot -Tpng -Gdpi=100 -Gsize=9,9!"))
+      (define proc-data (process/ports out p-stdin err
+                                       (string-join
+                                        (list "dot"
+                                              "-Tpng"
+                                              (~a "-Gdpi=" dpi)
+                                              "-Gsize=9,9!"))))
       (define control (list-ref proc-data 4))
       (control 'wait)
       (define errors (get-output-string err))
