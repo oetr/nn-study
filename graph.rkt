@@ -46,7 +46,7 @@
     (let ([p-stdin (open-input-string (value->graphviz v))]
           [out (open-output-bytes)]
           [err (open-output-bytes)])
-      (define proc-data (process/ports out p-stdin err "dot -Tpng -Gdpi=100 -Gsize=5,5!"))
+      (define proc-data (process/ports out p-stdin err "dot -Tpng -Gdpi=100 -Gsize=9,9!"))
       (define control (list-ref proc-data 4))
       (control 'wait)
       (define errors (get-output-string err))
