@@ -1,7 +1,8 @@
 #lang racket
 
 (require "micrograd.rkt"
-         "dot.rkt")
+         "dot.rkt"
+         "neuron.rkt")
 
 ;; first example
 (when #f
@@ -15,8 +16,8 @@
   (backward! L)
   (draw-dot L))
 
-;; first neuron
-(when #t
+;; manual neuron
+(when #f
   ;; inputs x1, x2
   (define-value x1 2.0)
   (define-value x2 0.0)
@@ -25,13 +26,18 @@
   (define-value w2 1.0)
   ;; bias of the neuron
   (define-value b 6.8813735870195432)
-  ;; 
+  ;; x1*w1 + x2*w2 + b
   (define-value* x1*w1 x1 w1)
   (define-value* x2*w2 x2 w2)
   (define-value+ x1*w1+x2*w2 x1*w1 x2*w2)
   (define-value+ n x1*w1+x2*w2 b)
-
-  (define o (value-tanh! n #:label "o"))
-  
+  (define-value-tanh o n)
   (backward! o)
   (draw-dot o))
+
+;; first neuron
+(when #t
+  (define n (make-neuron 10))
+  (define out (neuron-compute n (range 10 20)))
+  (backward! out)
+  (draw-dot out #:dpi 500 #:type "pdf" #:path "/mnt/ramdisk/out.pdf"))
