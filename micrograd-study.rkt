@@ -44,9 +44,19 @@
 
 
 ;; first layer
-(when #t
+(when #f
   (define l (make-layer 2 10))
   (define out (layer-compute l (range 1 3)))
   (backward! out)
   (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/layer.pdf")
   )
+
+
+;; first MLP
+(when #t
+  (define mlp (make-MLP 2 (list 10 10 10 1)))
+  (define out (MLP-compute mlp (range 1 3)))
+  (backward! out)
+  (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/MLP.pdf")
+  )
+

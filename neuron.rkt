@@ -26,7 +26,7 @@
   (define lof-w (neuron-w n))
   
   (unless (= (length lof-x) (length lof-w))
-    (error 'neuron-compute "Unequal length. w: ~a, x: ~a~n" (length lof-w) (length lof-w)))
+    (error 'neuron-compute "Unequal length. w: ~a, x: ~a~n" (length lof-w) (length lof-x)))
 
   (value-tanh!
    (value-add!* (cons (neuron-b n)
@@ -37,9 +37,30 @@
 
 (struct layer (neurons))
 
-(define (make-layer nof-inputs nout)
-  (layer (for/list ([_ nout]) (make-neuron nof-inputs))))
+(define (make-layer nof-inputs nof-outputs)
+  (layer (for/list ([_ nof-outputs]) (make-neuron nof-inputs))))
 
 (define (layer-compute a-layer lof-x)
   (for/list ([n (layer-neurons a-layer)])
     (neuron-compute n lof-x)))
+
+
+(struct MLP (layers))
+
+(define (make-MLP nof-inputs lof-n-outputs)
+  (MLP (let go ([in->out (cons nof-inputs lof-n-outputs)]
+                [out empty])
+         (cond [(empty? (cdr in->out)) out]
+               [else
+                (printf "make-MLP: make layer ~ax~a~n" (first in->out) (second in->out))
+                (go (cdr in->out)
+                         (cons (make-layer (first in->out) (second in->out))
+                               out))]))))
+
+(define (MLP-compute mlp x)
+  (foldl (lambda (layer x)
+           (printf "x: ~a layer: ~a~n" x layer)
+           (layer-compute layer x))
+         x
+         (MLP-layers mlp)))
+
