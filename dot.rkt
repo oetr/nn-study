@@ -9,24 +9,31 @@
   (define (traverse-value start)
     (define (extract-children-and-edges seen edges val)
       (define children (value-prev val))
-      (if (set-empty? children)
-          (values (set-add seen val) edges)
-          
-          ;; make edges: each child to operation (child -> op)
-          (for/fold ([seen seen][edges edges])
-                    ([child children])
-            
-            ;; op has the id "<hash><op>"
-            (define op-id (~a "\"" (eq-hash-code val) (value-op val) "\""))
+      (cond [(set-member? seen val) (values seen edges)]
+            [(set-empty? children) (values (set-add seen val) edges)]
+            [else
+             ;; make edges: each child to operation (child -> op)
+             (for/fold ([seen seen][edges edges])
+                       ([child children])
+               
+               ;; op has the id "<hash><op>"
+               (define op-id (~a "\"" (eq-hash-code val) (value-op val) "\""))
 
-            ;; recurse on the child
-            (extract-children-and-edges
-             (set-add seen val)
-             ;; add all edges: child -> op-id
-             (cons (~a (eq-hash-code child) " -> " op-id ";") edges)
-             child))))
+               ;; recurse on the child
+               (extract-children-and-edges
+                (set-add seen val)
+                ;; add all edges: child -> op-id
+                (cons (~a (eq-hash-code child) " -> " op-id ";") edges)
+                child))]))
     
-    (define-values (seen edges) (extract-children-and-edges (set) (list) start))
+    (define-values (seen edges)
+      (for/fold ([seen (set)]
+                 [edges (list)]
+                 #:result (values seen edges))
+                ([start (if (list? start) start (list start))])
+        (define-values (new-seen new-edges) (extract-children-and-edges (set) (list) start))
+        (values (set-union seen new-seen)
+                (append edges new-edges))))
 
     (append* edges (for/list ([val seen])
                      ;; label each value with a given label
@@ -54,7 +61,7 @@
                           empty)))))
   
   (define dot-lines
-    (append (cons "digraph {"
+    (append (cons "digraph {rankdir=\"LR\";"
                   (traverse-value v))
             (list "}")))
   (define fold (foldr string-append "" dot-lines))

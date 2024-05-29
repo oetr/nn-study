@@ -36,10 +36,17 @@
   (draw-dot o))
 
 ;; first neuron
-(when #t
+(when #f
   (define n (make-neuron 10))
   (define out (neuron-compute n (range 10 20)))
   (backward! out)
-  ;; /mnt/ramdisk/ is mapped to a tmpfs in RAM
   (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/out.pdf"))
 
+
+;; first layer
+(when #t
+  (define l (make-layer 2 3))
+  (define out (layer-compute l (range 1 3)))
+  (backward! out)
+  (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/layer.pdf")
+  )

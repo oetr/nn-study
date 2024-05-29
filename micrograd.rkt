@@ -109,8 +109,11 @@
       (for ([child (value-prev v)])
         (build-topo! child))
       (set! topo (cons v topo))))
-  (build-topo! v)
-  (set-value-grad! v 1.0)
+
+  (define wrapped-v (if (list? v) v (list v)))
+  (build-topo! (make-value 0.0 wrapped-v))
+  
+  (map (lambda (v) (set-value-grad! v 1.0)) wrapped-v)
   (for-each (lambda (v) ((value-backward v)))
             topo))
 
