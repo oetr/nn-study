@@ -109,8 +109,10 @@
       (for ([child (value-prev v)])
         (build-topo! child))
       (set! topo (cons v topo))))
-
+  
   (define wrapped-v (if (list? v) v (list v)))
+  ;; use a new dummy value to kick off topological view of the network
+  ;; its backward function is void and will not affect the actual network values
   (build-topo! (make-value 0.0 wrapped-v))
   
   (map (lambda (v) (set-value-grad! v 1.0)) wrapped-v)

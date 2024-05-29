@@ -45,7 +45,7 @@
 
 ;; first layer
 (when #t
-  (define l (make-layer 2 3))
+  (define l (make-layer 2 10))
   (define out (layer-compute l (range 1 3)))
   (backward! out)
   (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/layer.pdf")
