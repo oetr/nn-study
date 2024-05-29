@@ -63,7 +63,7 @@
 
 (define (draw-dot v
                   #:dpi (dpi 100)
-                  #:size (size "9,9!")
+                  #:size (size #f)
                   #:path (path #f)
                   #:type (type "png"))
   (parameterize ([current-custodian (make-custodian)])
@@ -76,7 +76,7 @@
                         (list "dot"
                               (~a "-T" type)
                               (~a "-Gdpi=" dpi)
-                              (~a "-Gsize=" size)))))
+                              (if size (~a "-Gsize=" size) "")))))
       (define control (list-ref proc-data 4))
       (control 'wait)
       (define errors (get-output-string err))

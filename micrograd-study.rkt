@@ -40,4 +40,6 @@
   (define n (make-neuron 10))
   (define out (neuron-compute n (range 10 20)))
   (backward! out)
-  (draw-dot out #:dpi 500 #:type "pdf" #:path "/mnt/ramdisk/out.pdf"))
+  ;; /mnt/ramdisk/ is mapped to a tmpfs in RAM
+  (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/out.pdf"))
+
