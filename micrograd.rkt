@@ -2,7 +2,8 @@
 #lang racket
 
 (require racket/struct)
-
+(require syntax/parse/define)
+(require syntax/parse)
 (provide (all-defined-out))
 
 ;; Value
@@ -18,7 +19,6 @@
       (lambda (obj) (list (list 'data (value-data obj))
                           (list 'grad (value-grad obj))
                           ))))])
-
 
 (define (grad+! val add)
   (set-value-grad! val (+ (value-grad val) add)))
@@ -94,3 +94,24 @@
   (set-value-grad! v 1.0)
   (for-each (lambda (v) ((value-backward v)))
             topo))
+
+
+(define-syntax (define-value stx)
+  (syntax-parse stx
+    [(_ name:id data (~optional (~seq #:op op:str)))
+     #'(define name (make-value data (~? (~@ #:op op)) #:label (symbol->string 'name)))]
+    [(_ name:id data children (~optional (~seq #:op op:str)))
+     #'(define name (make-value data children (~? (~@ #:op op)) #:label (symbol->string 'name)))]))
+
+(define-syntax (define-value* stx)
+  (syntax-parse stx
+    [(_ name:id a b)
+     #'(define name (value-mul! a b  #:label (symbol->string 'name)))]))
+
+(define-syntax (define-value+ stx)
+  (syntax-parse stx
+    [(_ name:id a b)
+     #'(define name (value-add! a b #:label (symbol->string 'name)))]))
+
+
+
