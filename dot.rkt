@@ -61,7 +61,11 @@
   fold)
 
 
-(define (draw-dot v #:dpi (dpi 100) #:size (size "9,9!"))
+(define (draw-dot v
+                  #:dpi (dpi 100)
+                  #:size (size "9,9!")
+                  #:path (path #f)
+                  #:type (type "png"))
   (parameterize ([current-custodian (make-custodian)])
     (let ([p-stdin (open-input-string (value->dot v))]
           [out (open-output-bytes)]
@@ -70,12 +74,23 @@
         (process/ports out p-stdin err
                        (string-join
                         (list "dot"
-                              "-Tpng"
+                              (~a "-T" type)
                               (~a "-Gdpi=" dpi)
                               (~a "-Gsize=" size)))))
       (define control (list-ref proc-data 4))
       (control 'wait)
       (define errors (get-output-string err))
-      (if (string=? "" errors)
-          (make-object bitmap% (open-input-bytes (get-output-bytes out)))
-          (printf "ERROR: ~a~n" errors)))))
+      (unless (string=? "" errors)
+        (error 'draw-dot "errors"))
+      (define data (get-output-bytes out))
+      (if path
+          (with-output-to-file path
+            #:exists 'truncate/replace
+            (lambda () (display data)))
+          (make-object bitmap% (open-input-bytes data))))))
+
+
+
+
+
+
