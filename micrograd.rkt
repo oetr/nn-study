@@ -69,26 +69,28 @@
 
 
 (define (value-tanh! val1 #:label (label ""))
-  (define x (value-data val1))
-  (define e^2x (exp (* 2 x)))
+  (define e^2x (exp (* 2 (value-data val1))))
   (define t (/ (+ -1 e^2x)
                (+  1 e^2x)))
+  
   (define out (make-value t (list val1) #:op "tanh" #:label label))
+  
   (define (backward)
     (grad+! val1 (* (- 1 (sqr t)) (value-grad out))))
+  
   (set-value-backward! out backward)
   out)
 
 (define (backward! v)
   (define visited (mutable-set))
   (define topo '())
-  (define (build-topo v)
+  (define (build-topo! v)
     (unless (set-member? visited v)
       (set-add! visited v)
       (for ([child (value-prev v)])
-        (build-topo child))
+        (build-topo! child))
       (set! topo (cons v topo))))
-  (build-topo v)
+  (build-topo! v)
   (set-value-grad! v 1.0)
   (for-each (lambda (v) ((value-backward v)))
             topo))
