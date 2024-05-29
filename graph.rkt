@@ -61,7 +61,7 @@
   fold)
 
 
-(define (make-graph v #:dpi (dpi 100) #:size (size "9,9!"))
+(define (draw-dot v #:dpi (dpi 100) #:size (size "9,9!"))
   (parameterize ([current-custodian (make-custodian)])
     (let ([p-stdin (open-input-string (value->dot v))]
           [out (open-output-bytes)]

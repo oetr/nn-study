@@ -1,7 +1,7 @@
 #lang racket
 
-(require "./micrograd.rkt")
-(require "./graph.rkt")
+(require "micrograd.rkt"
+         "graph.rkt")
 
 ;; first example
 (when #f
@@ -13,7 +13,7 @@
   (define f (make-value -2.0 #:label "f"))
   (define L (value-mul! d f #:label "L"))
   (backward! L)
-  (make-graph L))
+  (draw-dot L))
 
 ;; first neuron
 (when #t
@@ -34,6 +34,4 @@
   (define o (value-tanh! n #:label "o"))
   
   (backward! o)
-  (make-graph o))
-  
-    
+  (draw-dot o))
