@@ -1,7 +1,7 @@
 #lang racket
 
 (require "micrograd.rkt"
-         "graph.rkt")
+         "dot.rkt")
 
 ;; first example
 (when #f

@@ -1,3 +1,4 @@
+;; inspired by https://github.com/karpathy/micrograd
 #lang racket
 
 (require racket/struct)
@@ -69,8 +70,9 @@
 
 (define (value-tanh! val1 #:label (label ""))
   (define x (value-data val1))
-  (define t (/ (+ -1 (exp (* 2 x)))
-               (+  1 (exp (* 2 x)))))
+  (define e^2x (exp (* 2 x)))
+  (define t (/ (+ -1 e^2x)
+               (+  1 e^2x)))
   (define out (make-value t (list val1) #:op "tanh" #:label label))
   (define (backward)
     (grad+! val1 (* (- 1 (sqr t)) (value-grad out))))
