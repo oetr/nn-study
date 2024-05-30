@@ -101,17 +101,21 @@
 
 (define (MLP-train mlp xs ygt n
                    #:learning-rate (learning-rate 0.01))
+  (define parameters (MLP-parameters mlp))
   (for ([i n])
     
     ;; forward pass
     (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
     (define loss (mse-loss ygt y-pred))
 
+    ;; zero grads
+    (for ([p parameters]) (set-value-grad! p 0.0))
+
     ;; backward pass
     (backward! loss)
 
     ;; update
-    (for ([p (MLP-parameters mlp)])
+    (for ([p parameters])
       (define new-data (+ (value-data p)
                           (* -1.0 learning-rate (value-grad p))))
       (set-value-data! p new-data))
