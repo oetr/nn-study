@@ -82,9 +82,13 @@
                     empty)))))
   
   (define dot-lines
-    (append (cons "digraph {rankdir=\"LR\";"
-                  (traverse-value v))
+    (append (list "digraph {"
+                  "rankdir=\"LR\";"
+                  ;;"graph [splines=ortho, nodesep=0.8];"
+                  )
+            (traverse-value v)
             (list "}")))
+  
   (define fold (foldr string-append "" dot-lines))
   fold)
 
@@ -109,7 +113,7 @@
       (control 'wait)
       (define errors (get-output-string err))
       (unless (string=? "" errors)
-        (error 'draw-dot "errors"))
+        (error 'draw-dot "errors: ~s~n" errors))
       (define data (get-output-bytes out))
       (if path
           (with-output-to-file path
