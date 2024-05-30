@@ -103,7 +103,6 @@
                    #:learning-rate (learning-rate 0.01))
   (define parameters (MLP-parameters mlp))
   (for ([i n])
-    
     ;; forward pass
     (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
     (define loss (mse-loss ygt y-pred))
@@ -120,6 +119,4 @@
                           (* -1.0 learning-rate (value-grad p))))
       (set-value-data! p new-data))
 
-    (printf "~a: loss: ~a~n" i (value-data loss))
-
-    ))
+    (printf "~a: loss: ~a~n" i (value-data loss))))
