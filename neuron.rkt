@@ -120,3 +120,9 @@
       (set-value-data! p new-data))
 
     (printf "~a: loss: ~a~n" i (value-data loss))))
+
+(module+ test
+  ;; TODO cross-reference forward/backward passes with data from pytorch
+  
+  )
+
