@@ -2,7 +2,8 @@
 #lang racket
 
 (require racket/struct
-         syntax/parse/define)
+         syntax/parse/define
+         racket/math)
 
 (provide (all-defined-out))
 
@@ -34,7 +35,7 @@
       val))
 
 
-(define (value-add! val1 val2 #:label (label ""))
+(define (value+! val1 val2 #:label (label ""))
   (define w1 (value-wrap val1))
   (define w2 (value-wrap val2))
   
@@ -51,7 +52,40 @@
   (set-value-backward! out backward)
   out)
 
-(define (value-add!* vals #:label (label ""))
+(define (value-! val1 val2 #:label (label ""))
+  (define w1 (value-wrap val1))
+  (define w2 (value-wrap val2))
+  
+  (define out (make-value (- (value-data w1)
+                             (value-data w2))
+                          (list w1 w2)
+                          #:op "-"
+                          #:label label))
+  
+  (define (backward)
+    (grad+! w1 (value-grad out))
+    (grad+! w2 (value-grad out)))
+
+  (set-value-backward! out backward)
+  out)
+
+(define (values-! vals #:label (label ""))
+  (define wraps (map value-wrap vals))
+  (define out (make-value (foldl (lambda (v result)
+                                   (- result (value-data v)))
+                                 0.0 wraps)
+                          wraps
+                          #:op "-"
+                          #:label label))
+
+  (define (backward)
+    (for-each (lambda (v) (grad+! v (value-grad out)))
+              wraps))
+
+  (set-value-backward! out backward)
+  out)
+
+(define (values+! vals #:label (label ""))
   (define wraps (map value-wrap vals))
   (define out (make-value (foldl (lambda (v result)
                                    (+ result (value-data v)))
@@ -68,7 +102,7 @@
   out)
 
 
-(define (value-mul! val1 val2 #:label (label ""))
+(define (value*! val1 val2 #:label (label ""))
   (define w1 (value-wrap val1))
   (define w2 (value-wrap val2))
 
@@ -85,15 +119,24 @@
   (set-value-backward! out backward)
   out)
 
+(define (value-expt! val1 exponent #:label (label ""))
+  (define w1 (value-wrap val1))
+
+  (define out (make-value (expt (value-data w1) exponent)
+                          (list w1)
+                          #:op (~a "^" exponent)
+                          #:label label))
+
+  (define (backward)
+    (grad+! w1 (* (value-grad out) exponent (expt (value-data w1) (- exponent 1)))))
+
+  (set-value-backward! out backward)
+  out)
 
 (define (value-tanh! val1 #:label (label ""))
   (define w1 (value-wrap val1))
-  (define e^2x (exp (* 2 (value-data w1))))
-  (define t (/ (+ -1 e^2x)
-               (+  1 e^2x)))
-  
+  (define t (tanh (value-data w1)))
   (define out (make-value t (list w1) #:op "tanh" #:label label))
-  
   (define (backward)
     (grad+! w1 (* (- 1 (sqr t)) (value-grad out))))
   
@@ -130,12 +173,12 @@
 (define-syntax (define-value* stx)
   (syntax-parse stx
     [(_ name:id a b)
-     #'(define name (value-mul! a b  #:label (symbol->string 'name)))]))
+     #'(define name (value*! a b  #:label (symbol->string 'name)))]))
 
 (define-syntax (define-value+ stx)
   (syntax-parse stx
     [(_ name:id a b)
-     #'(define name (value-add! a b #:label (symbol->string 'name)))]))
+     #'(define name (value+! a b #:label (symbol->string 'name)))]))
 
 (define-syntax (define-value-tanh stx)
   (syntax-parse stx

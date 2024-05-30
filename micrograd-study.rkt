@@ -51,9 +51,39 @@
   (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/layer.pdf"))
 
 ;; first MLP
-(when #t
+(when #f
   (define mlp (make-MLP 2 (list 10 10 10 1)))
   (define out (MLP-compute mlp (range 1 3)))
   (backward! out)
   (draw-dot out #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/MLP.pdf"))
+
+;; computing loss
+(when #f
+  (define mlp (make-MLP 3 (list 4 4 1)))
+  (define xs (list (list 2.0 3.0 -1.0)
+                   (list 3.0 -1.0 0.5)
+                   (list 0.5 1.0 1.0)
+                   (list 1.0 1.0 -1.0)))
+  (define ys (list 1.0 -1.0 -1.0 1.0))
+  (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
+  y-pred
+  (define loss (mse-loss ys y-pred)) (set-value-label! loss "loss")
+  (backward! loss)
+  (define parameters (MLP-parameters mlp))
+  (print (length parameters))
+  (draw-dot loss #:dpi 100 #:type "pdf" #:path "/mnt/ramdisk/loss.pdf")
+  )
+
+;; training
+(when #t
+  (define mlp (make-MLP 3 (list 4 4 1)))
+  (define xs (list (list 2.0 3.0 -1.0)
+                   (list 3.0 -1.0 0.5)
+                   (list 0.5 1.0 1.0)
+                   (list 1.0 1.0 -1.0)))
+  (define ys (list 1.0 -1.0 -1.0 1.0))
+  (MLP-train mlp xs ys 100 #:learning-rate 0.002)
+  (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
+  (print (map value-data y-pred))
+  )
 

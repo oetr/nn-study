@@ -29,11 +29,15 @@
     (error 'neuron-compute "Unequal length. w: ~a, x: ~a~n" (length lof-w) (length lof-x)))
 
   (value-tanh!
-   (value-add!* (cons (neuron-b n)
-                      (for/list ([w lof-w]
-                                 [x lof-x]
-                                 [i (length lof-x)])
-                        (value-mul! w (value-wrap x #:label (~a "x_" i))))))))
+   (values+! (cons (neuron-b n)
+                   (for/list ([w lof-w]
+                              [x lof-x]
+                              [i (length lof-x)])
+                     (value*! w (value-wrap x #:label (~a "x_" i))))))))
+
+(define (neuron-parameters n)
+  (append (neuron-w n) (list (neuron-b n))))
+
 
 
 (struct layer (neurons)
@@ -54,11 +58,16 @@
 (define (layer-compute a-layer lof-x)
   (define labeled-lof-x
     (for/list ([x lof-x]
-             [i (length lof-x)])
-    (value-wrap x #:label (~a "x_" i))))
-  (for/list ([n (layer-neurons a-layer)])
-    (neuron-compute n labeled-lof-x)))
+               [i (length lof-x)])
+      (value-wrap x #:label (~a "x_" i))))
+  (define result (for/list ([n (layer-neurons a-layer)])
+                   (neuron-compute n labeled-lof-x)))
+  (if (= 1 (length result))
+      (first result)
+      result))
 
+(define (layer-parameters layer)
+  (flatten (map neuron-parameters (layer-neurons layer))))
 
 (struct MLP (layers)
   #:methods gen:custom-write
@@ -77,3 +86,36 @@
   (for/fold ([x lof-x])
             ([layer (MLP-layers mlp)])
     (layer-compute layer x)))
+
+(define (MLP-parameters mlp)
+  (flatten (map layer-parameters (MLP-layers mlp))))
+
+(define (mse-loss ygt yout)
+  (values+! 
+   (for/list ([y ygt]
+              [actual yout]
+              [i (length ygt)])
+     (value-expt! (value-! actual y #:label (~a "y_" i))
+                  2))))
+
+
+(define (MLP-train mlp xs ygt n
+                   #:learning-rate (learning-rate 0.01))
+  (for ([i n])
+    
+    ;; forward pass
+    (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
+    (define loss (mse-loss ygt y-pred))
+
+    ;; backward pass
+    (backward! loss)
+
+    ;; update
+    (for ([p (MLP-parameters mlp)])
+      (define new-data (+ (value-data p)
+                          (* -1.0 learning-rate (value-grad p))))
+      (set-value-data! p new-data))
+
+    (printf "~a: loss: ~a~n" i (value-data loss))
+
+    ))
