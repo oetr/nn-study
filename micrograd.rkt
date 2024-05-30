@@ -28,9 +28,9 @@
   (value data 0.0 void (apply set children) op label))
 
 
-(define (value-wrap val)
+(define (value-wrap val #:label (label ""))
   (if (number? val)
-      (make-value val)
+      (make-value val #:label label)
       val))
 
 

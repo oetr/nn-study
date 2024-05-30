@@ -18,8 +18,8 @@
 
 (define (make-neuron nof-inputs)
   (define uniform-1+1 (uniform-dist -1.0 1.0))
-  (neuron (for/list ([_ nof-inputs]) (make-value (sample uniform-1+1)))
-          (make-value (sample uniform-1+1))))
+  (neuron (for/list ([i nof-inputs]) (make-value (sample uniform-1+1) #:label (~a "w_" i)))
+          (make-value (sample uniform-1+1) #:label "b")))
 
 ;; computes w*x + b
 (define (neuron-compute n lof-x)
@@ -31,11 +31,22 @@
   (value-tanh!
    (value-add!* (cons (neuron-b n)
                       (for/list ([w lof-w]
-                                 [x lof-x])
-                        (value-mul! w x))))))
+                                 [x lof-x]
+                                 [i (length lof-x)])
+                        (value-mul! w (value-wrap x #:label (~a "x_" i))))))))
 
 
-(struct layer (neurons))
+(struct layer (neurons)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) 'layer)
+      (lambda (obj)
+        (define neurons (layer-neurons obj))
+        (list (length (neuron-w (first neurons)))
+              'x
+              (length neurons)))))])
+
 
 (define (make-layer nof-inputs nof-outputs)
   (layer (for/list ([_ nof-outputs]) (make-neuron nof-inputs))))
@@ -45,22 +56,20 @@
     (neuron-compute n lof-x)))
 
 
-(struct MLP (layers))
+(struct MLP (layers)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) 'MLP)
+      (lambda (obj) (MLP-layers obj))))])
 
 (define (make-MLP nof-inputs lof-n-outputs)
-  (MLP (let go ([in->out (cons nof-inputs lof-n-outputs)]
-                [out empty])
-         (cond [(empty? (cdr in->out)) out]
-               [else
-                (printf "make-MLP: make layer ~ax~a~n" (first in->out) (second in->out))
-                (go (cdr in->out)
-                         (cons (make-layer (first in->out) (second in->out))
-                               out))]))))
+  (MLP (for/list ([n-inputs (cons nof-inputs lof-n-outputs)]
+                  [n-outputs lof-n-outputs])
+         (make-layer n-inputs n-outputs))))
 
-(define (MLP-compute mlp x)
-  (foldl (lambda (layer x)
-           (printf "x: ~a layer: ~a~n" x layer)
-           (layer-compute layer x))
-         x
-         (MLP-layers mlp)))
 
+(define (MLP-compute mlp lof-x)
+  (for/fold ([x lof-x])
+            ([layer (MLP-layers mlp)])
+    (layer-compute layer x)))
