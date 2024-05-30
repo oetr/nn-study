@@ -114,7 +114,7 @@
 
   (define (backward)
     (grad+! w1 (* (value-data w2) (value-grad out)))
-    (grad+! w2 (* (value-data val1) (value-grad out))))
+    (grad+! w2 (* (value-data w1) (value-grad out))))
 
   (set-value-backward! out backward)
   out)
