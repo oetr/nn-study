@@ -84,6 +84,5 @@
   (define ys (list 1.0 -1.0 -1.0 1.0))
   (MLP-train mlp xs ys 1000 #:learning-rate 0.2)
   (define y-pred (for/list ([x xs]) (MLP-compute mlp x)))
-  (print (map value-data y-pred))
-  )
+  (print (map value-data y-pred)))
 
