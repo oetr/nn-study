@@ -52,8 +52,12 @@
   (layer (for/list ([_ nof-outputs]) (make-neuron nof-inputs))))
 
 (define (layer-compute a-layer lof-x)
+  (define labeled-lof-x
+    (for/list ([x lof-x]
+             [i (length lof-x)])
+    (value-wrap x #:label (~a "x_" i))))
   (for/list ([n (layer-neurons a-layer)])
-    (neuron-compute n lof-x)))
+    (neuron-compute n labeled-lof-x)))
 
 
 (struct MLP (layers)
