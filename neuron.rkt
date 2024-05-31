@@ -122,7 +122,40 @@
     (printf "~a: loss: ~a~n" i (value-data loss))))
 
 (module+ test
-  ;; TODO cross-reference forward/backward passes with data from pytorch
+  (require rackunit)
+  (define EPSILON 0.0000001)
+
+  (define (check-equal proc value expected (message ""))
+    (andmap (lambda (v expected)
+            (check-within (proc v) expected EPSILON
+                          message))
+          value expected))
+  
+  (define t0 (map make-value (range 1 6)))
+  (define t1 (map make-value (range 1 6)))
+  (define t2 (map value*! t0 t1))
+  (define t3 (map value-tanh! t2))
+  (define result (values+! t3))
+  (backward! result)
+
+  (define t0-expected-grad (list 4.1997434161e-01 2.6819013661e-03 1.8275975121e-07 2.0250467969e-13
+                                 0.0000000000e+00))
+  (check-equal value-grad t0 t0-expected-grad "t0 grad not equal")
+
+  (define t2-expected-data (list 1.0 4.0 9.0 16.0 25.0))
+  (check-equal value-data t2 t2-expected-data "t2 data not equal")
+
+  (define t2-expected-grad
+    (list 4.1997434161e-01 1.3409506830e-03 6.0919917071e-08 5.0626169923e-14
+          0.0000000000e+00))
+  (check-equal value-grad t2 t2-expected-grad "t2 grad not equal")
+  
+  
+  (define t3-expected-data (list 0.7615941560 0.9993292997 0.9999999695 1.0000000000 1.0000000000))
+  (check-equal value-data t3 t3-expected-data "t3 data not equal")
+  (define t3-expected-grad (list 1.0 1.0 1.0 1.0 1.0))
+  (check-equal value-grad t3 t3-expected-grad "t3 grad not equal")
   
   )
+
 
